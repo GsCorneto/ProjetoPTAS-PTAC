@@ -2,15 +2,17 @@ const { PrismaClient } = require("@prisma/client")
 const prisma = new PrismaClient();
 
 const express = require("express");
+
 const app = express ();
-
-
-const authRoutes = require("./routes/authRoutes")
 app.use(express.json());
 
+app.use(express.urlencoded({extended: true}));
+
+const authRoutes = require("./routes/authRoutes")
 app.use("/auth", authRoutes);
 
-app.listen(8000);
+
+app.listen(9003);
 // async function run(){
 //     //Insert usuario
 //  await prisma.usuario.create({
