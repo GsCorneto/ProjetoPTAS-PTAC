@@ -5,7 +5,9 @@ const express = require("express");
 const app = express ();
 
 
-const authRoute = require("./routes/authRouters")
+const authRoutes = require("./routes/authRoutes")
+app.use(express.json());
+
 app.use("/auth", authRoutes);
 
 app.listen(8000);
