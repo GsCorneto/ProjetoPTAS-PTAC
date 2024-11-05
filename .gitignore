@@ -3,3 +3,8 @@
 /package.json
 
 package-lock.json
+
+showUsers.js
+prisma/schema.prisma
+prisma/schema.prisma
+.env
