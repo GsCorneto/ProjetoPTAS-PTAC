@@ -1,12 +1,36 @@
-const prisma = require("./prisma/prismaClient")
+const express = require('express')
+const prisma = require("../prisma/prismaClient");
 const bcrypt = require("bcryptjs"); 
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+
+const app = express();
+
+app.use(express.json());
 
 class AuthController{
     static async login(req,res){
         const {email, password} = req.body;
 
-        const usuario = await prisma.usuario.findUnique({
+        if (!email || !password) {
+           return res.status(422).json({
+                erro: true,
+                 mensagem: "Todos os campos são obrigatórios."
+           })}
+
+           const emailCheck = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+           if (!emailCheck.test(email)) {
+               return res.status(422).json({
+                   erro: true,
+                   mensagem: "Email inválido."
+            })}   
+
+        if(!password || password.length < 8){
+            return res.status(422).json({
+                erro: true,
+                mensagem: "A senha deve possuir mais de 8 caracteres."
+            })}
+
+        const usuario = await prisma.usuario.findFirst({
             where:{
                 email:email
             }
@@ -16,19 +40,16 @@ class AuthController{
             return res.status(422).json({
                 erro : true,
                 mensagem: "Usuário não encontrado."
-            })
-        }
+            })}
 
-        //check-password
         const passCheck = bcrypt.compareSync(password, usuario.password);
 
         if(!passCheck){
             return res.status(422).json({
                 erro : true,
                 mensagem: "Senha incorreta."
-            })
-        }
-        //creation token
+            })}
+
         const token = jwt.sign({ id: usuario.id}, process.env.CHAVE, {
             expiresIn: "1h"
         })
@@ -43,20 +64,20 @@ class AuthController{
     static async cadastro(req,res){
         const{nome, email, password} = req.body;
 
-        if(!nome || nome.lenght < 6){
+        if(!nome || nome.length < 6){
             return res.status(422).json({
                 erro: true,
                 mensagem: "O nome deve conter mais de 6 caracteres.",
-
             })}
 
-        if(!email || email.lenght < 10){
-            return res.status(422).json({
-                erro: true,
-                mensagem: "Email inválido."
-            })}
+            const emailCheck = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+            if (!emailCheck.test(email)) {
+                return res.status(422).json({
+                    erro: true,
+                    mensagem: "Email inválido."
+             })}  
 
-        if(!password || password.lenght < 8){
+        if(!password || password.length < 8){
             return res.status(422).json({
                 erro: true,
                 mensagem: "A senha deve possuir mais de 8 caracteres."
@@ -75,9 +96,7 @@ class AuthController{
                 })
             }
 
-        //security hash
         const salt = bcrypt.genSaltSync(4);
-        //hash creation
         const hashPassword = bcrypt.hashSync(password, salt);
 
             try{
@@ -103,9 +122,11 @@ class AuthController{
             } catch (error){
                 return res.status(500).json({
                     erro: true,
-                    mensagem: "Erro! " + error
+                    mensagem: "Erro! " + error.message
                 })
             }  
+            
     }
+    static async verificaAutent(req, res, next){}
 }
 module.exports = AuthController;

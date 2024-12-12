@@ -1,4 +1,12 @@
 const prisma = require("./prisma/prismaClient")
+const cors = require("cors")
+
+// const corsAllow = {
+//     origin: '*',
+//     methods: 'GET,HEAD,POST,PATCH,DELETE',
+//     allowedHeaders: 'Content-Type, Authorization',
+// };
+
 
 const express = require("express");
 
@@ -6,10 +14,18 @@ const app = express ();
 app.use(express.json());
 
 app.use(express.urlencoded({extended: true}));
+app.use(cors());
 
 const authRoutes = require("./routes/authRoutes")
 app.use("/auth", authRoutes);
 
+const profileRoutes = require("./routes/profileRoutes");
+app.use("/perfil", profileRoutes)
+
+app.get("/meus-pedidos"), AuthController.verificaAutent, (req, res) =>
+{
+    res.json({pedidos: 'lista de pedidos do usuário'})
+}
 
 app.listen(8900);
 // async function run(){
