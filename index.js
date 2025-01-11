@@ -7,6 +7,7 @@ const cors = require("cors")
 //     allowedHeaders: 'Content-Type, Authorization',
 // };
 
+const AuthController = require("./controllers/AuthController")
 
 const express = require("express");
 

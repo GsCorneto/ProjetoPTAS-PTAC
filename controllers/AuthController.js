@@ -127,6 +127,22 @@ class AuthController{
             }  
             
     }
-    static async verificaAutent(req, res, next){}
+    static async verificaAutent(req, res, next){
+        const authHeader = req.headers["authorization"];
+        const token = authHeader && authHeader.split(" ")[1];
+
+        if(!token){
+            return res.status(422).json(
+            { message: "Token não encontrado."})
+        }
+
+        jwt.verify(TokenExpiredError, process.env.CHAVE, (err, payload)=>{
+            if(err){
+                return res.status(401).json({msg: "Token Inválido"});
+            }
+            req.usuarioId = payload.id;
+            next();
+        })
+    }
 }
 module.exports = AuthController;
