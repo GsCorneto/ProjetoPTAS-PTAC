@@ -17,16 +17,19 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cors());
 
+//rotas autentificação
 const authRoutes = require("./routes/authRoutes")
 app.use("/auth", authRoutes);
 
-const profileRoutes = require("./routes/profileRoutes");
-app.use("/perfil", profileRoutes)
+// const profileRoutes = require("./routes/profileRoutes");
+// app.use("/perfil", profileRoutes)
 
-app.get("/meus-pedidos"), AuthController.verificaAutent, (req, res) =>
-{
-    res.json({pedidos: 'lista de pedidos do usuário'})
-}
+// app.get("/meus-pedidos"), AuthController.verificaAutent, (req, res) =>
+// {
+//     res.json({pedidos: 'lista de pedidos do usuário'})
+// }
+
+
 
 app.listen(8900);
 // async function run(){
