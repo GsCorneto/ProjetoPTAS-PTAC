@@ -50,7 +50,7 @@ class AuthController{
                 mensagem: "Senha incorreta."
             })}
 
-        const token = jwt.sign({ id: usuario.id}, process.env.CHAVE, {
+        const token = jwt.sign({ id: usuario.id, tipo: usuario.tipo}, process.env.CHAVE, {
             expiresIn: "1h"
         })
 
@@ -62,7 +62,7 @@ class AuthController{
     }
 
     static async cadastro(req,res){
-        const{nome, email, password} = req.body;
+        const{nome, email, password, adminPass} = req.body;
 
         if(!nome || nome.length < 6){
             return res.status(422).json({
@@ -99,13 +99,15 @@ class AuthController{
         const salt = bcrypt.genSaltSync(4);
         const hashPassword = bcrypt.hashSync(password, salt);
 
+        const userTipo = adminPass === process.env.ADMIN_PASS ? "admin" : "cliente"
+
             try{
                 const usuario = await prisma.usuario.create({
                     data: {
                         nome: nome,
                         email: email,
                         password: hashPassword,
-                        tipo: "cliente",
+                        tipo: userTipo,
                     }
                 });
 
@@ -136,7 +138,7 @@ class AuthController{
             { message: "Token não encontrado."})
         }
 
-        jwt.verify(TokenExpiredError, process.env.CHAVE, (err, payload)=>{
+        jwt.verify(token, process.env.CHAVE, (err, payload)=>{
             if(err){
                 return res.status(401).json({msg: "Token Inválido"});
             }
@@ -144,5 +146,26 @@ class AuthController{
             next();
         })
     }
+    static async verificaAdmin(req, res, next){
+        const authHeader = req.headers["authorization"];
+        const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+        return res.status(422).json(
+            { mensagem: "Token não encontrado." })
+    }
+
+    jwt.verify(token, process.env.CHAVE, (err, payload) => {
+        if (err) {
+            return res.status(401).json({ mensagem: "Token Inválido." });
+        }
+
+        if (payload.tipo !== "admin") {
+            return res.status(403).json({ mensagem: "Nah, ah ,ah Você não disse a palavra mágica!" });
+        }
+        req.usuarioTipo = payload.tipo;
+        next();
+    });
+ }
 }
 module.exports = AuthController;

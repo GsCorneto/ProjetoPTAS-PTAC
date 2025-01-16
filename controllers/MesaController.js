@@ -7,7 +7,7 @@ const app = express();
 
 app.use(express.json());
 
-class AuthController{
+class MesaController{
     static async cadastro(req,res){
         const{codigo, n_lugares} = req.body;
 
