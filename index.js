@@ -24,12 +24,10 @@ app.use("/auth", authRoutes);
 // const profileRoutes = require("./routes/profileRoutes");
 // app.use("/perfil", profileRoutes)
 
-// app.get("/meus-pedidos"), AuthController.verificaAutent, (req, res) =>
+// app.get("/privado"), AuthController.verificaAutent, (req, res) =>
 // {
 //     res.json({pedidos: 'lista de pedidos do usuário'})
 // }
-
-
 
 app.listen(8900);
 // async function run(){

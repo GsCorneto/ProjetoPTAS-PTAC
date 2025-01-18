@@ -7,6 +7,7 @@ router.post("/cadastro", AuthController.cadastro);
 
 router.post("/login", AuthController.login);
 
-router.post("/cadastroMesa", AuthController.verificaAutent, AuthController.verificaAdmin);
+
+
 
 module.exports = router;

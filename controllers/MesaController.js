@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 
 class MesaController{
-    static async cadastro(req,res){
+    static async cadastrarMesa(req,res){
         const{codigo, n_lugares} = req.body;
 
         if(!codigo || codigo.length < 6){
