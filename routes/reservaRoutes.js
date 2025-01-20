@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 
-const ProfileController = require("../controllers/ProfileController")
+const ReservaController = require("../controllers/ReservaController")
 
-router.get("/", ProfileController.visualizar)
+router.get("/", ReservaController.visualizar)
 
-router.patch("/", ProfileController.atualizar)
+router.patch("/", ReservaController.atualizar)
 
 module.exports = router;

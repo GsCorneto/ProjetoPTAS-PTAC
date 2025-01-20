@@ -7,6 +7,10 @@ router.get("/", ProfileController.visualizar)
 
 router.patch("/", ProfileController.atualizar)
 
-router.get("/todos", ProfileController.todos)
+router.get("/todos", ProfileController.listaUsuario)
+
+console.log("ProfileController.visualizar:", ProfileController.visualizar);
+console.log("ProfileController.atualizar:", ProfileController.atualizar);
+console.log("ProfileController.todos:", ProfileController.listaUsuario);
 
 module.exports = router;

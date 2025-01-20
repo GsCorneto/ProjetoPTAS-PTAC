@@ -3,10 +3,10 @@ const router = express.Router();
 
 const MesaController = require("../controllers/MesaController")
 
-router.post("/novo", MesaController.cadastro);
+router.post("/novo", MesaController.cadastrarMesa, MesaController.verificaAdmin);
 
-router.post("/", MesaController.login);
+router.get("/", MesaController.listaMesa);
 
-router.post("/disponibilidade", MesaController.login);
+router.get("/disponibilidade", MesaController.listaMesaDisp);
 
 module.exports = router;

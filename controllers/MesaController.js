@@ -10,16 +10,18 @@ class MesaController{
     static async cadastrarMesa(req,res){
         const{codigo, n_lugares} = req.body;
 
-        if(!codigo || codigo.length < 2){
+        if(!codigo || codigo.length < 2|| codigo.length > 2){
             return res.status(422).json({
                 erro: true,
                 mensagem: "O código deve conter 2 digitos",
             })}
 
-        if(!n_lugares || n_lugares.length > 6){
+        const nn_lugar = Number(n_lugares);
+
+        if(!nn_lugar || isNaN(nn_lugar) || nn_lugar > 6){
             return res.status(422).json({
                 erro: true,
-                mensagem: "Este é o limite de uma mesa"
+                mensagem: "Num. Máximo de lugares: 6"
             })}
 
             const existMesa = await prisma.mesa.count({
@@ -31,7 +33,7 @@ class MesaController{
             if(existMesa != 0){
                 return res.status(422).json({
                     erro: true,
-                    mensagem: "Já existe uma mesa cadastrado com este código."
+                    mensagem: "Já existe uma mesa cadastrada com este código."
                 })
             }
 
@@ -57,7 +59,8 @@ class MesaController{
     }
 
     static async listaMesa(req, res){
-        const mesas = prisma.mesa.findMany({
+        try{
+            const mesas = await prisma.mesa.findMany({
             select: {
                 id: true,
                 codigo: true,
@@ -68,10 +71,12 @@ class MesaController{
                  erro: false,
                  mesas: mesas
            });
+        }catch (err){
             return res.status(500).json({
                erro: true,
-               mensagem: "Erro ao listar"
+               mensagem: "Erro ao listar as mesas"
             })
+        }
     }
 
     static async listaMesaDisp(req, res){

@@ -20,6 +20,12 @@ app.use(cors());
 //rotas autentificação
 const authRoutes = require("./routes/authRoutes")
 app.use("/auth", authRoutes);
+const mesaRoutes = require("./routes/mesaRoutes")
+app.use("/mesa", mesaRoutes);
+const profileRoutes = require("./routes/profileRoutes")
+app.use("/perfil",AuthController.verificaAutent, profileRoutes);
+// const reservaRoutes = require("./routes/mesaRoutes")
+// app.use("/reserva", mesaRoutes);
 
 // const profileRoutes = require("./routes/profileRoutes");
 // app.use("/perfil", profileRoutes)
