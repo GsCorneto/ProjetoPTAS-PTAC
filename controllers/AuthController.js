@@ -147,25 +147,17 @@ class AuthController{
         })
     }
     static async verificaAdmin(req, res, next){
-        const authHeader = req.headers["authorization"];
-        const token = authHeader && authHeader.split(" ")[1];
-
-    if (!token) {
-        return res.status(422).json(
-            { mensagem: "Token não encontrado." })
+        const usuario = await prisma.usuario.findUnique({
+            where: {id: req.usuarioId}
+        });
+        if(usuario.tipo === "adm"){
+            next();
+        }else{
+            return res.status(401).json({
+                erro: true,
+                mensagem: "Você não é ADM"
+            })
+        }
     }
-
-    jwt.verify(token, process.env.CHAVE, (err, payload) => {
-        if (err) {
-            return res.status(401).json({ mensagem: "Token Inválido." });
-        }
-
-        if (payload.tipo !== "admin") {
-            return res.status(403).json({ mensagem: "Nah, ah ,ah Você não disse a palavra mágica!" });
-        }
-        req.usuarioTipo = payload.tipo;
-        next();
-    });
  }
-}
 module.exports = AuthController;

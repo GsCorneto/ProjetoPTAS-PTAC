@@ -1,6 +1,6 @@
 const express = require('express')
 const prisma = require("../prisma/prismaClient"); 
-const jwt = require("jsonwebtoken");
+
 
 const app = express();
 
@@ -131,28 +131,6 @@ class MesaController{
             detalhes: err.message
         });
     }}
-
-
-static async verificaAdmin(req, res, next){
-        const authHeader = req.headers["authorization"];
-        const token = authHeader && authHeader.split(" ")[1];
-
-    if (!token) {
-        return res.status(422).json(
-            { mensagem: "Token não encontrado." })
-    }
-
-    jwt.verify(token, process.env.CHAVE, (err, payload) => {
-        if (err) {
-            return res.status(401).json({ mensagem: "Token Inválido." });
-        }
-
-        if (payload.tipo !== "admin") {
-            return res.status(403).json({ mensagem: "Nah, ah ,ah Você não disse a palavra mágica!" });
-        }
-        req.usuarioTipo = payload.tipo;
-        next();
-    });
- }}
+}
 
  module.exports = MesaController;

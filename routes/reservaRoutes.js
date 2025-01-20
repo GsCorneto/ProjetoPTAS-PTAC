@@ -1,10 +1,15 @@
 const express = require("express");
 const router = express.Router();
 
+const AuthController = require("../controllers/AuthController")
 const ReservaController = require("../controllers/ReservaController")
 
-router.get("/", ReservaController.visualizar)
+router.post("/novo", ReservaController.Reservar)
 
-router.patch("/", ReservaController.atualizar)
+// router.post("/", ReservaController.listarReserva)
+
+// router.delete("/", ReservaController.Cancelar)
+
+// router.get("/list", AuthController.verificaAdmin, ReservaController.listaRData)
 
 module.exports = router;

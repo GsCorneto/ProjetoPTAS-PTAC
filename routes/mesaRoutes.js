@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 
+const AuthController = require("../controllers/AuthController")
 const MesaController = require("../controllers/MesaController")
 
-router.post("/novo", MesaController.cadastrarMesa, MesaController.verificaAdmin);
+router.post("/novo",AuthController.verificaAutent, AuthController.verificaAdmin, MesaController.cadastrarMesa );
 
 router.get("/", MesaController.listaMesa);
 
