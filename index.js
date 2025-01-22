@@ -19,7 +19,7 @@ app.use("/mesa", mesaRoutes);
 const profileRoutes = require("./routes/profileRoutes")
 app.use("/perfil",AuthController.verificaAutent, profileRoutes);
 const reservaRoutes = require("./routes/reservaRoutes")
-app.use("/reserva",AuthController.verificaAutent, reservaRoutes);
+app.use("/reservas",AuthController.verificaAutent, reservaRoutes);
 
 app.listen(8900);
 // async function run(){

@@ -3,7 +3,8 @@ const jwt = require("jsonwebtoken")
 
 class ProfileController{
     static async visualizar(req, res){
-       try{ const usuario = await prisma.usuario
+       try{ 
+        const usuario = await prisma.usuario
         .findUnique({
             where: {id: req.usuarioId},
             select:{
@@ -60,23 +61,7 @@ class ProfileController{
             res.status(500).json({ erro: true, mensagem: "Ocorreu um erro ao atualizar." });
         }
     }
-     static async listaUsuario(req, res){
-        const authHeader = req.headers["authorization"];
-        const passe = authHeader && authHeader.split(" ")[1];
-
-        if (!passe) {
-            return res.status(422).json(
-                { mensagem: "Token não encontrado." })
-        }
-
-        jwt.verify(passe, process.env.CHAVE, (err, payload) => {
-            if (err) {
-                return res.status(401).json({ mensagem: "Token Inválido." });
-            }
-            if (payload.tipo !== "admin") {
-                return res.status(403).json({ mensagem: "Nah, ah ,ah Você não disse a palavra mágica!" });
-            }
-    
+    static async listaUsuario(req, res){
             try{
                 const usuarios = prisma.usuario.findMany({
                     select: {
@@ -97,9 +82,9 @@ class ProfileController{
                         mensagem: "Erro ao listar"
                     })
             }
-            });
-    }
+    };
 }
+
 
 
 module.exports = ProfileController;

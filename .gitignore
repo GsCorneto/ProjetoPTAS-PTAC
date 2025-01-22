@@ -8,3 +8,6 @@ showUsers.js
 prisma/schema.prisma
 prisma/schema.prisma
 .env
+prisma/banco.db
+/prisma
+/prisma

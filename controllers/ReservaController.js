@@ -9,8 +9,9 @@ app.use(express.json());
 
 class ReservaController{
     static async Reservar(req,res){
-        const{n_pessoas, mesaId} = req.body;
-        const data = new Date(req.body.data);
+        const{data, n_pessoas, mesaId} = req.body;
+        //const data = new Date(req.body.data);
+
             const dataCheck = /^\d{4}-\d{2}-\d{2}$/;
             if (!dataCheck.test(data)) {
              return res.status(422).json({
@@ -18,31 +19,57 @@ class ReservaController{
                 mensagem: "Data inválida. Use o formato yyyy-mm-dd."
              });}
 
+
+             const dataISO = new Date(`${data}T00:00:00.000Z`);
+             if(dataISO.toString() === "Invalid Date"){
+                return res.status(422).json({
+                    erro: true,
+                    mensagem: "Formato da data é inválido"
+                })
+             }
+
+
+            const hoje = new Date();
+            if (data < hoje.setHours(0, 0, 0, 0)) {
+             return res.status(422).json({
+                erro: true,
+                mensagem: "Voce literalmente quer a mesa pra ontem."
+            });
+            }
+
+            const mesID = Number(mesaId);
+
              const mesa = await prisma.mesa.findUnique({
-                where: {id: mesaId},
+                where: {id: mesID},
                 include: {
                     reservas: {
                         where:{
-                            data: data,
+                            data: dataISO,
                             status: true
                         },
                     },
                 },
              });
 
-             //Mesa livre na data
-              if(mesa.reservas.length > 0){
+            if(!mesa) {
+                return res.status(404).json({
+                    erro: true,
+                    mensagem: "Mesa não encontrada."
+                });
+            }
+
+            if(mesa.reservas.length > 0){
                 return res.status(400).json({
                     erro: true,
                     mensagem: "Mesa já reservada para esta data."
                 })
               }
+            
              
 
-
-        const nn_pess = Number(n_pessoas);
-        if(!nn_pess || isNaN(nn_pess) || nn_pess > 6){
-            return res.status(422).json({
+            const nn_pess = Number(n_pessoas);
+            if(!nn_pess || isNaN(nn_pess) || nn_pess > 6){
+                 return res.status(422).json({
                 erro: true,
                 mensagem: "Este é o limite de uma mesa, Reserva uma mesa adicional"
             })}
@@ -50,7 +77,7 @@ class ReservaController{
             try{
                 const reserva = await prisma.reserva.create({
                     data: {
-                        data: data,
+                        data: dataISO,
                         n_pessoas: n_pessoas,
                         usuario:{
                             connect:{
@@ -59,7 +86,7 @@ class ReservaController{
                         },
                         mesa:{
                             connect:{
-                                id: mesaId,
+                                id: mesID,
                             }
                         },
                     },
@@ -68,9 +95,10 @@ class ReservaController{
                 return res.status(201).json({
                     erro: false,
                     mensagem: "Reserva efetuada com sucesso!",
+                    reserva: reserva
                 })
 
-            } catch (error){
+            }catch (error){
                 return res.status(500).json({
                     erro: true,
                     mensagem: "Erro! " + error.message
@@ -80,17 +108,31 @@ class ReservaController{
 
     static async listarReserva(req, res){
         try{
-            const mesas = await prisma.mesa.findMany({
-            select: {
-                id: true,
-                codigo: true,
-                n_lugares: true,
+            const usuarioId = req.usuarioId
+
+            const reservas = await prisma.reserva.findMany({
+                where:{
+                    usuarioId: usuarioId,
+                },
+                select:{
+                    id: true,
+                    data: true,
+                    n_pessoas: true,
+                      mesa:{
+                         select:{
+                            id: true,
+                             codigo: true,
+                             n_lugares: true
+                         }
+                     }
                 }
         });
-            res.status(200).json({
-                 erro: false,
-                 mesas: mesas
-           });
+
+        return res.status(200).json({
+            erro: false,
+            reservas: reservas,
+        });
+
         }catch (err){
             return res.status(500).json({
                erro: true,
@@ -100,57 +142,39 @@ class ReservaController{
     }
 
     static async Cancelar(req, res){
-        const {data} = req.query;
-
-        if (!data){
+        const {reservaId} = req.query;
+        if(!reservaId || isNaN(reservaId)){
             return res.status(422).json({
                 erro: true,
-                mensagem: "Insira a data."
-            })
-        }
-        const dataCheck = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dataCheck.test(data)) {
-         return res.status(422).json({
-            erro: true,
-            mensagem: "Data inválida. Use o formato yyyy-mm-dd."
-         });
-        }
-        try {
-         const mesasDisponiveis = await prisma.mesa.findMany({
-            where: {
-                reservas: {
-                    none: {data_reserva: data
-                    }
-                }
-            },
-            select: {
-                id: true,
-                codigo: true,
-                n_lugares: true,
-                reservas: true
-            }
-         });
-
-        if (mesasDisponiveis.length === 0) {
-            return res.status(404).json({
-                erro: true,
-                mensagem: "Nenhuma mesa disponível para a data fornecida."
+                mensagem: "ID da reserva nválido."
             });
         }
+        try{
+            const reserva = await prisma.reserva.findUnique({
+                where: {id: Number(reservaId)}
+            });
+            if(!reserva){
+                return res.status(404).json({
+                    erro: true,
+                    mensagem: "Erro ao encontrar a reserva"
+                });
+            }
+            await prisma.reserva.delete({
+                where: {id: Number(reservaId)}
+            });
 
-        
-        res.status(200).json({
-            erro: false,
-            mesas: mesasDisponiveis
-        });
+            return res.status(200).json({
+                erro: false,
+                mensagem: "Reserva cancelada!"
+            })
 
-    } catch (err) {
-        res.status(500).json({
-            erro: true,
-            mensagem: "Erro ao listar mesas disponíveis.",
-            detalhes: err.message
-        });
-    }}
+        }catch(error){
+            return res.status(500).json({
+                erro: true,
+                mensagem: "Erro ao cancelar a reserva: " + error.message,
+            })
+        }
+    }
     static async listaRData(req, res){
         try{
             const mesas = await prisma.mesa.findMany({
