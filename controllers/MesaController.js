@@ -80,7 +80,7 @@ class MesaController{
     }
 
     static async listaMesaDisp(req, res){
-        const {data} = req.query;
+        const {data} = req.body;
 
         if (!data){
             return res.status(422).json({
@@ -95,20 +95,35 @@ class MesaController{
             mensagem: "Data inválida. Use o formato yyyy-mm-dd."
          });
         }
+
+        const dataISO = new Date(`${data}T00:00:00.000Z`);
+        if(dataISO.toString() === "Invalid Date"){
+           return res.status(422).json({
+               erro: true,
+               mensagem: "Formato da data é inválido"
+           })
+        }
+
         try {
          const mesasDisponiveis = await prisma.mesa.findMany({
-            where: {
-                reservas: {
-                    none: {data_reserva: data
+           select: {
+            codigo: true,
+            n_lugares: true,
+                reservas:{
+                 where:{
+                    data: dataISO
+                 },
+                 select:{
+                    data: true,
+                    n_pessoas: true,
+                    usuario:{
+                        select:{
+                            nome:true
+                        }
                     }
+                 }
                 }
-            },
-            select: {
-                id: true,
-                codigo: true,
-                n_lugares: true,
-                reservas: true
-            }
+           }
          });
 
         if (mesasDisponiveis.length === 0) {

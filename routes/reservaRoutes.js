@@ -10,6 +10,6 @@ router.post("/", ReservaController.listarReserva)
 
 router.delete("/", ReservaController.Cancelar)
 
-// router.get("/list", AuthController.verificaAdmin, ReservaController.listaRData)
+router.get("/list", AuthController.verificaAdmin, ReservaController.listaRData)
 
 module.exports = router;

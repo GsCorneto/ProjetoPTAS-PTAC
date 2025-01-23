@@ -182,26 +182,78 @@ class ReservaController{
             })
         }
     }
-    
+
     static async listaRData(req, res){
-        try{
-            const mesas = await prisma.mesa.findMany({
-            select: {
-                id: true,
-                codigo: true,
-                n_lugares: true,
-                }
-        });
-            res.status(200).json({
-                 erro: false,
-                 mesas: mesas
-           });
-        }catch (err){
-            return res.status(500).json({
-               erro: true,
-               mensagem: "Erro ao listar"
+        const {data} = req.body;
+
+        if (!data){
+            return res.status(422).json({
+                erro: true,
+                mensagem: "Insira a data."
             })
         }
+        const dataCheck = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dataCheck.test(data)) {
+         return res.status(422).json({
+            erro: true,
+            mensagem: "Data inválida. Use o formato yyyy-mm-dd."
+         });
+        }
+
+        const dataISO = new Date(`${data}T00:00:00.000Z`);
+             if(dataISO.toString() === "Invalid Date"){
+                return res.status(422).json({
+                    erro: true,
+                    mensagem: "Formato da data é inválido"
+                })
+             }
+
+        try {
+         const reservasDisp = await prisma.reserva.findMany({
+            where: {
+                data: dataISO
+            },
+            select: {
+                Id: true,
+                n_pessoas: true,
+                status: true,
+                usuario:{
+                    select:{
+                        id: true,
+                        nome: true,
+                        email: true
+                    }    
+                },
+                mesa:{
+                    select:{
+                        id: true,
+                        codigo: true,
+                        n_lugares: true
+                    }
+                }
+            }
+         });
+
+        if (reservasDisp.length === 0) {
+            return res.status(404).json({
+                erro: true,
+                mensagem: "Nenhuma mesa disponível para a data fornecida."
+            });
+        }
+
+        
+        res.status(200).json({
+            erro: false,
+            mesas: reservasDisp
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            erro: true,
+            mensagem: "Erro ao listar mesas disponíveis.",
+            detalhes: err.message
+        });
+    }
     }
 }
 
