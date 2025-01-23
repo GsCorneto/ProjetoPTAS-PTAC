@@ -6,9 +6,9 @@ const ReservaController = require("../controllers/ReservaController")
 
 router.post("/novo", ReservaController.Reservar)
 
-// router.post("/", ReservaController.listarReserva)
+router.post("/", ReservaController.listarReserva)
 
-// router.delete("/", ReservaController.Cancelar)
+router.delete("/", ReservaController.Cancelar)
 
 // router.get("/list", AuthController.verificaAdmin, ReservaController.listaRData)
 

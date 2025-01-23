@@ -19,7 +19,7 @@ class ReservaController{
                 mensagem: "Data inválida. Use o formato yyyy-mm-dd."
              });}
 
-
+             //Postman tava pedindo formato ISO-8601 DateTime
              const dataISO = new Date(`${data}T00:00:00.000Z`);
              if(dataISO.toString() === "Invalid Date"){
                 return res.status(422).json({
@@ -30,7 +30,7 @@ class ReservaController{
 
 
             const hoje = new Date();
-            if (data < hoje.setHours(0, 0, 0, 0)) {
+            if (dataISO < hoje.setHours(0, 0, 0, 0)) {
              return res.status(422).json({
                 erro: true,
                 mensagem: "Voce literalmente quer a mesa pra ontem."
@@ -107,7 +107,9 @@ class ReservaController{
     }
 
     static async listarReserva(req, res){
+        
         try{
+        
             const usuarioId = req.usuarioId
 
             const reservas = await prisma.reserva.findMany({
@@ -115,7 +117,7 @@ class ReservaController{
                     usuarioId: usuarioId,
                 },
                 select:{
-                    id: true,
+                    Id: true,
                     data: true,
                     n_pessoas: true,
                       mesa:{
@@ -127,6 +129,8 @@ class ReservaController{
                      }
                 }
         });
+        
+
 
         return res.status(200).json({
             erro: false,
@@ -136,22 +140,25 @@ class ReservaController{
         }catch (err){
             return res.status(500).json({
                erro: true,
-               mensagem: "Erro ao listar"
+               mensagem: "Erro ao listar" + err
             })
+            
         }
     }
 
     static async Cancelar(req, res){
-        const {reservaId} = req.query;
+        const {reservaId} = req.body;
+
+        
         if(!reservaId || isNaN(reservaId)){
             return res.status(422).json({
                 erro: true,
-                mensagem: "ID da reserva nválido."
+                mensagem: "ID da reserva inválido."
             });
         }
         try{
             const reserva = await prisma.reserva.findUnique({
-                where: {id: Number(reservaId)}
+                where: {Id: Number(reservaId)}
             });
             if(!reserva){
                 return res.status(404).json({
@@ -160,7 +167,7 @@ class ReservaController{
                 });
             }
             await prisma.reserva.delete({
-                where: {id: Number(reservaId)}
+                where: { Id: Number(reservaId)}
             });
 
             return res.status(200).json({
@@ -175,6 +182,7 @@ class ReservaController{
             })
         }
     }
+    
     static async listaRData(req, res){
         try{
             const mesas = await prisma.mesa.findMany({
@@ -195,8 +203,6 @@ class ReservaController{
             })
         }
     }
-
-
 }
 
  module.exports = ReservaController;
