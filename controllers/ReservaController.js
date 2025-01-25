@@ -183,78 +183,76 @@ class ReservaController{
         }
     }
 
-    static async listaRData(req, res){
-        const {data} = req.body;
-
-        if (!data){
+    static async listaRData(req, res) {
+        const { data } = req.query;
+    
+        if (!data) {
             return res.status(422).json({
                 erro: true,
-                mensagem: "Insira a data."
-            })
-        }
-        const dataCheck = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dataCheck.test(data)) {
-         return res.status(422).json({
-            erro: true,
-            mensagem: "Data inválida. Use o formato yyyy-mm-dd."
-         });
-        }
-
-        const dataISO = new Date(`${data}T00:00:00.000Z`);
-             if(dataISO.toString() === "Invalid Date"){
-                return res.status(422).json({
-                    erro: true,
-                    mensagem: "Formato da data é inválido"
-                })
-             }
-
-        try {
-         const reservasDisp = await prisma.reserva.findMany({
-            where: {
-                data: dataISO
-            },
-            select: {
-                Id: true,
-                n_pessoas: true,
-                status: true,
-                usuario:{
-                    select:{
-                        id: true,
-                        nome: true,
-                        email: true
-                    }    
-                },
-                mesa:{
-                    select:{
-                        id: true,
-                        codigo: true,
-                        n_lugares: true
-                    }
-                }
-            }
-         });
-
-        if (reservasDisp.length === 0) {
-            return res.status(404).json({
-                erro: true,
-                mensagem: "Nenhuma mesa disponível para a data fornecida."
+                mensagem: "Insira a data.",
             });
         }
-
-        
-        res.status(200).json({
-            erro: false,
-            mesas: reservasDisp
-        });
-
-    } catch (err) {
-        res.status(500).json({
-            erro: true,
-            mensagem: "Erro ao listar mesas disponíveis.",
-            detalhes: err.message
-        });
+    
+        const dataCheck = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dataCheck.test(data)) {
+            return res.status(422).json({
+                erro: true,
+                mensagem: "Data inválida. Use o formato yyyy-mm-dd.",
+            });
+        }
+    
+        const inicioDia = new Date(`${data}T00:00:00.000Z`);
+        const fimDia = new Date(`${data}T23:59:59.999Z`);
+    
+        try {
+            const reservasDisp = await prisma.reserva.findMany({
+                where: {
+                    data: {
+                        gte: inicioDia,
+                        lte: fimDia,
+                    },
+                },
+                select: {
+                    Id: true,
+                    n_pessoas: true,
+                    status: true,
+                    usuario: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            email: true,
+                        },
+                    },
+                    mesa: {
+                        select: {
+                            id: true,
+                            codigo: true,
+                            n_lugares: true,
+                        },
+                    },
+                },
+            });
+    
+            if (reservasDisp.length === 0) {
+                return res.status(404).json({
+                    erro: true,
+                    mensagem: "Nenhuma reserva disponível para a data fornecida.",
+                });
+            }
+    
+            res.status(200).json({
+                erro: false,
+                reservas: reservasDisp,
+            });
+        } catch (err) {
+            res.status(500).json({
+                erro: true,
+                mensagem: "Erro ao listar reservas disponíveis.",
+                detalhes: err.message,
+            });
+        }
     }
-    }
+    
 }
 
  module.exports = ReservaController;
