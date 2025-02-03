@@ -10,16 +10,16 @@ app.use(express.json());
 class ReservaController{
     static async Reservar(req,res){
         const{data, n_pessoas, mesaId} = req.body;
-        //const data = new Date(req.body.data);
 
             const dataCheck = /^\d{4}-\d{2}-\d{2}$/;
             if (!dataCheck.test(data)) {
              return res.status(422).json({
                 erro: true,
-                mensagem: "Data inválida. Use o formato yyyy-mm-dd."
+                mensagem: "Data inválida. Use o formato yyyy-mm-dd." 
+                
              });}
 
-             //Postman tava pedindo formato ISO-8601 DateTime
+            // Postman tava pedindo formato ISO-8601 DateTime
              const dataISO = new Date(`${data}T00:00:00.000Z`);
              if(dataISO.toString() === "Invalid Date"){
                 return res.status(422).json({
@@ -30,7 +30,7 @@ class ReservaController{
 
 
             const hoje = new Date();
-            if (dataISO < hoje.setHours(0, 0, 0, 0)) {
+            if (data < hoje.setHours(0, 0, 0, 0)) {
              return res.status(422).json({
                 erro: true,
                 mensagem: "Voce literalmente quer a mesa pra ontem."
@@ -38,17 +38,22 @@ class ReservaController{
             }
 
             const mesID = Number(mesaId);
+            if (isNaN(mesID) || mesID <= 0) {
+                return res.status(400).json({
+                    erro: true,
+                    mensagem: "ID da mesa inválido."
+                });
+            }
 
+            const nn_pess = Number(n_pessoas);
+            if(!nn_pess || isNaN(nn_pess) || nn_pess > 6){
+                 return res.status(422).json({
+                erro: true,
+                mensagem: "Este é o limite de uma mesa, Reserva uma mesa adicional"
+            })}
+            
              const mesa = await prisma.mesa.findUnique({
-                where: {id: mesID},
-                include: {
-                    reservas: {
-                        where:{
-                            data: dataISO,
-                            status: true
-                        },
-                    },
-                },
+                where: {id: mesID}
              });
 
             if(!mesa) {
@@ -58,27 +63,26 @@ class ReservaController{
                 });
             }
 
-            if(mesa.reservas.length > 0){
+            const reservaExiste = await prisma.reserva.findMany({
+                where: {
+                    mesaId: mesID,
+                    data: dataISO,
+                    status: true
+                }
+            })
+
+            if (reservaExiste.length > 0){
                 return res.status(400).json({
                     erro: true,
-                    mensagem: "Mesa já reservada para esta data."
+                    mensagem: "Mesa já reservada para esta data"
                 })
-              }
-            
-             
-
-            const nn_pess = Number(n_pessoas);
-            if(!nn_pess || isNaN(nn_pess) || nn_pess > 6){
-                 return res.status(422).json({
-                erro: true,
-                mensagem: "Este é o limite de uma mesa, Reserva uma mesa adicional"
-            })}
+            }
             
             try{
                 const reserva = await prisma.reserva.create({
                     data: {
                         data: dataISO,
-                        n_pessoas: n_pessoas,
+                        n_pessoas: nn_pess,
                         usuario:{
                             connect:{
                                 id: req.usuarioId,
@@ -90,6 +94,11 @@ class ReservaController{
                             }
                         },
                     },
+                })
+
+                await prisma.mesa.update({
+                    where: {id: mesID},
+                    data: {status: false}
                 })
 
                 return res.status(201).json({
@@ -107,7 +116,6 @@ class ReservaController{
     }
 
     static async listarReserva(req, res){
-        
         try{
         
             const usuarioId = req.usuarioId
@@ -201,8 +209,11 @@ class ReservaController{
             });
         }
     
-        const inicioDia = new Date(`${data}T00:00:00.000Z`);
-        const fimDia = new Date(`${data}T23:59:59.999Z`);
+        const inicioDia = new Date(data);
+        inicioDia.setHours(0, 0, 0, 0);
+
+        const fimDia = new Date(data);
+        fimDia.setHours(23, 59, 59, 999);
     
         try {
             const reservasDisp = await prisma.reserva.findMany({

@@ -10,7 +10,7 @@ class MesaController{
     static async cadastrarMesa(req,res){
         const{codigo, n_lugares} = req.body;
 
-        if(!codigo || codigo.length < 2|| codigo.length > 2){
+        if(!codigo || codigo.length !== 2){
             return res.status(422).json({
                 erro: true,
                 mensagem: "O código deve conter 2 digitos",
@@ -104,11 +104,12 @@ class MesaController{
             const mesasDisponiveis = await prisma.mesa.findMany({
                 where: {
                     reservas: {
-                        none: {
+                        some: {
                             data: {
                                 gte: inicioDia,
                                 lte: fimDia,
                             },
+                            status: true
                         },
                     },
                 },
